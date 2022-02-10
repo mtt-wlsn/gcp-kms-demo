@@ -93,6 +93,7 @@ public class KeyManagementDemo
 
         ByteString plaintextAsByteString = ByteString.CopyFrom(Encoding.UTF8.GetBytes(plaintext));
 
+        // plaintext has a length limit of 65536
         // encryptResponse.Name holds the version used for this encryption.
         EncryptResponse encryptResponse = await _client.EncryptAsync(cryptoKeyName, plaintextAsByteString);
 
