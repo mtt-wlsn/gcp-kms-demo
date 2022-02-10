@@ -1,5 +1,4 @@
 using System.Text;
-using System.Net;
 using Google.Api.Gax.ResourceNames;
 using Google.Cloud.Kms.V1;
 using Google.Protobuf.WellKnownTypes;
@@ -88,17 +87,18 @@ public class KeyManagementDemo
         }
     }
 
-    public async Task<string> EncryptAsync(string plaintext)
+    public async Task<(string ciphertext, string keyVersion)> EncryptAsync(string plaintext)
     {
         CryptoKeyName cryptoKeyName = new CryptoKeyName(_projectId, _locationId, _keyRingId, _keyId);
 
         ByteString plaintextAsByteString = ByteString.CopyFrom(Encoding.UTF8.GetBytes(plaintext));
 
+        // encryptResponse.Name holds the version used for this encryption.
         EncryptResponse encryptResponse = await _client.EncryptAsync(cryptoKeyName, plaintextAsByteString);
 
         var ciphertext = Convert.ToBase64String(encryptResponse.Ciphertext.ToByteArray());
 
-        return ciphertext;
+        return (ciphertext, encryptResponse.Name);
     }
 
     public async Task<string> DecryptAsync(string ciphertext)
@@ -113,14 +113,42 @@ public class KeyManagementDemo
 
         return plaintext;
     }
-
-    public async void RotateKeyAsync()
+    
+    public async Task<CryptoKey> RotateKeyAsync()
     {
+        CryptoKeyName cryptoKeyName = new CryptoKeyName(_projectId, _locationId, _keyRingId, _keyId);
 
+        // Create a new key version
+        CryptoKeyVersion newKeyVersion = await _client.CreateCryptoKeyVersionAsync(cryptoKeyName, new CryptoKeyVersion());
+
+        CryptoKey cryptoKey = await _client.UpdateCryptoKeyPrimaryVersionAsync(
+            cryptoKeyName, newKeyVersion.CryptoKeyVersionName.CryptoKeyVersionId);
+
+        return cryptoKey;
     }
 
-    public async void DisableKeyAsync()
+    public async Task<CryptoKeyVersion> DisableKeyAsync(string keyVersion)
     {
+        CryptoKeyVersion cryptoKeyVersion = new CryptoKeyVersion
+        {
+            CryptoKeyVersionName = new CryptoKeyVersionName(_projectId, _locationId, _keyRingId, _keyId, keyVersion),
+            State = CryptoKeyVersion.Types.CryptoKeyVersionState.Disabled
+        };
 
+        FieldMask fieldMask = new FieldMask
+        {
+            Paths = { "state" }
+        };
+
+        CryptoKeyVersion result = await _client.UpdateCryptoKeyVersionAsync(cryptoKeyVersion, fieldMask);
+
+        return result;
+    }
+
+    public async Task<CryptoKeyVersion> GetCryptoKeyVersionAsync(string cryptoKeyVersionName)
+    {
+        CryptoKeyVersion cryptoKeyVersion = await _client.GetCryptoKeyVersionAsync(cryptoKeyVersionName);
+
+        return cryptoKeyVersion;
     }
 }

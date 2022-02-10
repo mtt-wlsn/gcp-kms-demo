@@ -15,7 +15,11 @@
             "cwd": "${workspaceFolder}/gcp_kms_demo",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
-            "stopAtEntry": false
+            "stopAtEntry": false,
+            "logging": {
+                "programOutput": true,
+                "moduleLoad": false
+            }
         },
         {
             "name": ".NET Core Attach",

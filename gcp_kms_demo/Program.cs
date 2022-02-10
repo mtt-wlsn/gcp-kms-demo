@@ -28,10 +28,15 @@ await keyManagementDemo.CreateKeyRingAsync();
 // Create a Key.
 var key = await keyManagementDemo.CreateSymmetricKeyAsync();
 
-var plaintext = "I love pizza!";
-
 // Test out encryption/decryption
-var encryptedValue = await keyManagementDemo.EncryptAsync(plaintext);
-Console.WriteLine(encryptedValue);
-var decryptedValue = await keyManagementDemo.DecryptAsync(encryptedValue);
-Console.WriteLine(decryptedValue);
+var plaintext = "I love pizza!";
+var encryptionResult = await keyManagementDemo.EncryptAsync(plaintext);
+var decryptedValue = await keyManagementDemo.DecryptAsync(encryptionResult.ciphertext);
+var keyVersion = await keyManagementDemo.GetCryptoKeyVersionAsync(encryptionResult.keyVersion);
+
+Console.WriteLine("");
+Console.WriteLine($"Encryption Results:");
+Console.WriteLine($"Key Version ID: {keyVersion.CryptoKeyVersionName.CryptoKeyVersionId}");
+Console.WriteLine($"Cipher Text: {encryptionResult.ciphertext}");
+Console.WriteLine($"Decrypted value: {decryptedValue}");
+Console.WriteLine("");
